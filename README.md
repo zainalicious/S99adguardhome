@@ -7,15 +7,15 @@ curl -s -S -L https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/s
 ```
 save config file 
 ```sh
-wget -O /opt/AdGuardHome/AdGuardHome.yaml \
+wget -O /usrdata/opt/AdGuardHome/AdGuardHome.yaml \
 https://raw.githubusercontent.com/USERNAME/REPO/main/AdGuardHome.yaml
 ```
 add service
 ```sh
-wget -O /opt/etc/init.d/S99adguardhome \
+wget -O /usrdata/opt/etc/init.d/S99adguardhome \
 https://raw.githubusercontent.com/USERNAME/REPO/main/S99adguardhome
 
-chmod +x /opt/etc/init.d/S99adguardhome
+chmod +x /usrdata/opt/etc/init.d/S99adguardhome
 
-/opt/etc/init.d/S99adguardhome restart
+/usrdata/opt/etc/init.d/S99adguardhome start
 ```
