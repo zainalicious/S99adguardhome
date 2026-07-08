@@ -1,0 +1,25 @@
+[Unit]
+Description=AdGuard Home DNS Server with LAN Redirect (IPv4 & IPv6)
+After=network.target qmanager-firewall.service
+
+[Service]
+Type=simple
+# Perubahan path ke /usrdata/
+ExecStart=/usrdata/AdGuardHome/AdGuardHome -c /usrdata/AdGuardHome/AdGuardHome.yaml -w /usrdata/AdGuardHome
+Restart=always
+RestartSec=5
+
+# ---- AKTIFKAN ATURAN REDIRECT SAAT START ----
+ExecStartPost=/usr/sbin/iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
+ExecStartPost=/usr/sbin/iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
+ExecStartPost=/usr/sbin/ip6tables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
+ExecStartPost=/usr/sbin/ip6tables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
+
+# ---- HAPUS ATURAN REDIRECT SAAT STOP ----
+ExecStopPost=/usr/sbin/iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
+ExecStopPost=/usr/sbin/iptables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
+ExecStopPost=/usr/sbin/ip6tables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
+ExecStopPost=/usr/sbin/ip6tables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
+
+[Install]
+WantedBy=multi-user.target
