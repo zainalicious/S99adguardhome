@@ -3,7 +3,7 @@
 ENABLED=yes
 PROG=/usrdata/opt/AdGuardHome/AdGuardHome
 ARGS="-c /usrdata/opt/AdGuardHome/AdGuardHome.yaml -w /usrdata/opt/AdGuardHome/data -l /usrdata/opt/AdGuardHome/data/adguard.log"
-PIDFILE=/var/run/adguardhome.pid
+PIDFILE=/usrdata/opt/var/run/adguardhome.pid
 
 add_dns_redirect() {
     # Hapus aturan lama (abaikan jika belum ada)
