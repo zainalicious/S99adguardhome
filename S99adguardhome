@@ -31,22 +31,27 @@ start() {
 
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
         echo "AdGuard Home is already running, PID: $(cat "$PIDFILE")"
-        exit 0
+        return 0
     fi
 
     rm -f "$PIDFILE"
 
     start-stop-daemon -S -b -q -m -p "$PIDFILE" --exec "$PROG" -- $ARGS
 
-    sleep 1
+    i=0
+    while [ "$i" -lt 10 ]; do
+        if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+            echo "AdGuard Home started, PID: $(cat "$PIDFILE")"
+            add_dns_redirect
+            return 0
+        fi
 
-    if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-        echo "AdGuard Home started, PID: $(cat "$PIDFILE")"
-        add_dns_redirect
-    else
-        echo "Failed to start AdGuard Home"
-        exit 1
-    fi
+        sleep 1
+        i=$((i + 1))
+    done
+
+    echo "Failed to start AdGuard Home"
+    return 1
 }
 
 stop() {
