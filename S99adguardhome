@@ -1,74 +1,55 @@
 #!/bin/sh
-
 ENABLED=yes
 PROG=/usrdata/opt/AdGuardHome/AdGuardHome
-ARGS="-c /usrdata/opt/AdGuardHome/AdGuardHome.yaml -w /usrdata/opt/AdGuardHome/data -l /usrdata/opt/AdGuardHome/data/adguard.log"
-PIDFILE=/usrdata/opt/var/run/adguardhome.pid
-
+ARGS="-c /usrdata/opt/AdGuardHome/AdGuardHome.yaml -w /usrdata/opt/AdGuardHome/data
+-l /usrdata/opt/AdGuardHome/data/adguard.log"
+PIDFILE=/var/run/adguardhome.pid
 add_dns_redirect() {
     # Hapus aturan lama (abaikan jika belum ada)
     iptables  -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     iptables  -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     ip6tables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     ip6tables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
-
     # Tambahkan aturan baru
     iptables  -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
     iptables  -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
     ip6tables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353
     ip6tables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353
 }
-
 remove_dns_redirect() {
     iptables  -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     iptables  -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     ip6tables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
     ip6tables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 5353 2>/dev/null
 }
-
 start() {
     echo "Starting AdGuard Home..."
-
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
         echo "AdGuard Home is already running, PID: $(cat "$PIDFILE")"
-        return 0
+        exit 0
     fi
-
     rm -f "$PIDFILE"
-
     start-stop-daemon -S -b -q -m -p "$PIDFILE" --exec "$PROG" -- $ARGS
-
-    i=0
-    while [ "$i" -lt 10 ]; do
-        if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-            echo "AdGuard Home started, PID: $(cat "$PIDFILE")"
-            add_dns_redirect
-            return 0
-        fi
-
-        sleep 1
-        i=$((i + 1))
-    done
-
-    echo "Failed to start AdGuard Home"
-    return 1
+    sleep 1
+    if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+        echo "AdGuard Home started, PID: $(cat "$PIDFILE")"
+        add_dns_redirect
+    else
+        echo "Failed to start AdGuard Home"
+        exit 1
+    fi
 }
-
 stop() {
     echo "Stopping AdGuard Home..."
-
     remove_dns_redirect
-
     start-stop-daemon -K -q -p "$PIDFILE"
     rm -f "$PIDFILE"
 }
-
 restart() {
     stop
     sleep 2
     start
 }
-
 status() {
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
         echo "AdGuard Home is running"
@@ -79,7 +60,6 @@ status() {
         rm -f "$PIDFILE"
     fi
 }
-
 case "$1" in
     start)   [ "$ENABLED" = "yes" ] && start ;;
     stop)    stop ;;
@@ -87,5 +67,4 @@ case "$1" in
     status)  status ;;
     *) echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
 esac
-
 exit 0
